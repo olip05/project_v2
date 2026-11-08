@@ -1,0 +1,10 @@
+datasets
+librosa
+torch
+pandas 
+transformers[torch]
+tensorboard
+matplotlib
+soundfile
+jiwer
+vosk

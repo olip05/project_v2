@@ -1,0 +1,6 @@
+{
+    "name": "sample",
+    "Batch_size": 25, 
+    "lr": 1e-5,
+    "epochs": 10
+}
