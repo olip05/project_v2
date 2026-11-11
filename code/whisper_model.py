@@ -65,9 +65,8 @@ class WhisperModel(Model):
         """Run prediction in small batches to prevent CUDA Out of Memory errors."""
         self.model.eval()
         transcriptions: List[str] = []
-        batch_size = 4  # Sicherer Wert für eine 16GB GPU
+        batch_size = 4
         
-        # inputs ist hier ein Tensor der Form [N, channels, length]
         total_samples = inputs.shape[0]
         
         with torch.no_grad():

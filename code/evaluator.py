@@ -68,26 +68,32 @@ class Evaluator:
         """compute all defined metrices"""
         predictions: List[str] = self.get_predictions(model)
 
-        return (model.name(), {'predictions': predictions, 'wer': self.compute_wer(predictions), 'cer': self.compute_cer(predictions)})
+        wer = self.compute_wer(predictions)
+        cer = self.compute_cer(predictions)
+
+        return (model.name(), {'predictions': predictions, 'wer': wer, 'cer': cer})
 
     def results_to_file(self, content: Dict[str, Any], avg: bool) -> None:
         """save results fo json"""
-        with open(os.path.join(info.EVALUATION_PATH, f"{'avg-' if avg else ''}{'+'.join(content["models"])}-{str(content['time']).replace(' ', '_')}.json"), "w", encoding="utf8") as f:
+        with open(os.path.join(info.EVALUATION_PATH, f"{str(content['time']).replace(' ', '_')}-{'+'.join(content["models"])}{'-AVG' if avg else ''}.json"), "w", encoding="utf8") as f:
             json.dump(content, f, indent=4)
     
-    def compare_models(self, models: List[Model], write_to_file: bool = False) -> Dict[str, Any]:
+    def compare_models(self, models: List[Model], write_to_file: bool = False, part_of_avg: bool = False) -> Dict[str, Any]:
         """run evaluation for all models"""
         res: Dict[str, Any] = {}
         for m in models:
             name, metrics = self.compute_metrics(m)
             res[name] = metrics
 
-        res["models"] = list(res.keys())
+        res["models"] = [x.split("/")[-1] for x in list(res.keys())]
         res["indices"] = list(self.indices.tolist())
         res["time"] = str(datetime.datetime.now())
 
         if write_to_file:
             self.results_to_file(res, False)
+
+        if not part_of_avg:
+            self.print_single_results(res)
 
         return res
 
@@ -95,13 +101,14 @@ class Evaluator:
         """get statistical results"""
         res: Dict[str, Any] = {}
         for i in range(runs):
-            res[str(i)] = self.compare_models(models)
+            res[str(i)] = self.compare_models(models, part_of_avg=True)
             self.sample_test_data()
 
         model_names = [m.name() for m in models]
         averages: Dict[str, Dict[str, float]] = {}
 
         for m_name in model_names:
+            # FIXME oplew add std_dev to calculations
             wers = [res[str(i)][m_name]["wer"] for i in range(runs)]
             cers = [res[str(i)][m_name]["cer"] for i in range(runs)]
             averages[m_name] = {
@@ -109,9 +116,56 @@ class Evaluator:
                 "avg_cer": float(np.mean(cers))
             }
 
-        res["models"] = list(res["0"].keys())
+        res["models"] = [x.split("/")[-1] for x in list(res["0"].keys())]
         res["averages"] = averages
         res["time"] = str(datetime.datetime.now())
 
+        self.print_avg_results(res)
+
         self.results_to_file(res, True)
         return res
+
+    def print_single_results(self, res: Dict[str, Any]):
+        width = 124
+
+        print("+" + "-" * (width - 2) + "+")
+        print(f"| Time: {res['time']:<{width - 9}}|")
+        print(f"| Test size: {len(res['indices']):<{width - 14}}|")
+        print("+" + "-" * (width - 2) + "+")
+
+        for m in res["models"]:
+            # Find the corresponding model result
+            model_key = next(
+                key for key in res
+                if key not in ("models", "indices", "time")
+                and key.split("/")[-1] == m
+            )
+
+            print(f"| Model: {m:<{width - 10}}|")
+            print(f"|   WER: {res[model_key]['wer'] * 100:>8.2f} %"
+                f"{'':<{width - 20}}|")
+            print(f"|   CER: {res[model_key]['cer'] * 100:>8.2f} %"
+                f"{'':<{width - 20}}|")
+            print("|" + " " * (width - 2) + "|")
+
+        print("+" + "-" * (width - 2) + "+")
+
+    def print_avg_results(self, res: Dict[str, Any]):
+        width = 124
+
+        print("+" + "-" * (width - 2) + "+")
+        print(f"| Time: {res['time']:<{width - 9}}|")
+        print(f"| Test size: {len(self.indices):<{width - 14}}|")
+        print("+" + "-" * (width - 2) + "+")
+
+        for m in res["averages"].keys():
+
+            print(f"| Model: {m:<{width - 10}}|")
+            print(f"|   WER: {res["averages"][m]['avg_wer'] * 100:>8.2f} %"
+                f"{'':<{width - 20}}|")
+            print(f"|   CER: {res["averages"][m]['avg_cer'] * 100:>8.2f} %"
+                f"{'':<{width - 20}}|")
+            print("|" + " " * (width - 2) + "|")
+
+        print("+" + "-" * (width - 2) + "+")
+        

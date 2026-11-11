@@ -1,0 +1,49 @@
+{
+    "0": {
+        "vosk-model-small-eo-0.42": {
+            "predictions": [
+                "pro tio la profesoroj estas inter la plej eminentaj esploristoj de francujo",
+                "post malprave li laboris en la \u0109efurbo lingvon",
+                "granda afero alvoki",
+                "precipe pla\u0109is al li la verbaj formoj",
+                "kis signifas hungare malgranda",
+                "petro kuntiris ironie la lipojn",
+                "",
+                "vol bildo povu mi povus promeni en urbodomo",
+                "kiom da homoj tiom da donki\u0125otoj",
+                "\u0109iu strofo \u0109efo la\u016d kun rising sun libeloza \u015di"
+            ],
+            "wer": 0.8356164383561644,
+            "cer": 0.5416666666666666
+        },
+        "models": [
+            "vosk-model-small-eo-0.42"
+        ],
+        "indices": [
+            719,
+            42,
+            592,
+            817,
+            696,
+            265,
+            864,
+            535,
+            179,
+            205
+        ],
+        "time": "2026-11-11 17:18:30.907671"
+    },
+    "models": [
+        "vosk-model-small-eo-0.42",
+        "models",
+        "indices",
+        "time"
+    ],
+    "averages": {
+        "vosk-model-small-eo-0.42": {
+            "avg_wer": 0.8356164383561644,
+            "avg_cer": 0.5416666666666666
+        }
+    },
+    "time": "2026-11-11 17:18:30.908510"
+}
