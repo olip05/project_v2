@@ -14,6 +14,7 @@ parser = argp.ArgumentParser(description="Evaluate ASR models and optionally run
 parser.add_argument("--base_model", nargs="*", default=[], help="List of HMM-DNN model names")
 parser.add_argument("--vosk_model", nargs="*", default=[], help="List of Vosk model names")
 parser.add_argument("--whisper_model", nargs="*", default=[], help="List of Whisper names")
+# FIXME Noor if you adapt the wav2vec model to th emodel interface you can simply include a new option here to give it as a parameter
 parser.add_argument("--avg", default=-1, type=int, help="Number of runs for statistical aggregation")
 parser.add_argument("--save", action="store_true", help="Save evaluation results to file")
 args = parser.parse_args()
@@ -28,6 +29,7 @@ for name in args.vosk_model:
     models.append(VoskModel(name))
 for name in args.whisper_model:
     models.append(WhisperModel(name))
+# FIXME Noor same here 
 
 if len(models) == 0:
     raise ValueError("No model names given. Please specifiy at least one.")

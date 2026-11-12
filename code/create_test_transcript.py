@@ -1,6 +1,7 @@
 """run test evaluation"""
 import os
 from typing import List, Any, Optional
+import zipfile
 import argparse as argp
 from model import Model
 from whisper_model import WhisperModel
@@ -22,8 +23,6 @@ args = parser.parse_args()
 selected_models = [args.base_model, args.vosk_model, args.whisper_model]
 if sum(x is not None for x in selected_models) != 1:
     raise ValueError("Only provide one model for testing.")
-
-data_frame=pd.read_csv(os.path.join(info.DATASET_PATH, "geo", "dev.csv"))
 
 model: Optional[Model] = None
 
@@ -48,10 +47,14 @@ for entry in test_data["file"].to_list():
 predictions: List[str] = []
 for batch in range(len(inputs)//BATCH_SIZE):
     predictions += model.predict(model.format_inputs(inputs[batch*BATCH_SIZE:min(len(inputs), (batch+1)*BATCH_SIZE)]))
-    print(f"{batch*BATCH_SIZE}/{len(inputs)} ({batch*BATCH_SIZE/len(inputs)*100:>.2f}%)")
+    print(f"{datetime.datetime.now().time()} Predictions completed: {batch*BATCH_SIZE}/{len(inputs)} ({batch*BATCH_SIZE/len(inputs)*100:>.2f}%)")
 
 test_data["transcript"] = predictions
 
 out_path: str = os.path.join(info.RESULT_PATH, f"{str(datetime.datetime.now()).replace(" ", "_")}-{model.name()}.csv")
 test_data.to_csv(out_path)
+
+with zipfile.ZipFile(os.path.join(info.RESULT_PATH, f"{datetime.datetime.now().date()}-group01.zip"), 'w') as f:
+    f.write(out_path)
+
 print("Results saved to ", out_path)

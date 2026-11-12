@@ -50,7 +50,7 @@ class WhisperModel(Model):
             inputs,
             sampling_rate=16000,
             return_tensors="pt",
-            padding="max_length", 
+            padding="max_length",
             max_length=480000,
             truncation=True
         ).input_features
@@ -66,16 +66,16 @@ class WhisperModel(Model):
         self.model.eval()
         transcriptions: List[str] = []
         batch_size = 4
-        
+
         total_samples = inputs.shape[0]
-        
+
         with torch.no_grad():
             for i in range(0, total_samples, batch_size):
                 batch_inputs = inputs[i : i + batch_size]
                 predicted_ids: torch.Tensor = self.model.generate(batch_inputs)  # type: ignore
                 batch_texts = self.processor.batch_decode(predicted_ids, skip_special_tokens=True) # type: ignore
                 transcriptions.extend(batch_texts)
-                
+
         return transcriptions
 
     def train(self, config_name: str, train_data: pd.DataFrame, val_data: pd.DataFrame) -> None:
