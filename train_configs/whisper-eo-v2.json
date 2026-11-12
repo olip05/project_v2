@@ -1,0 +1,6 @@
+{
+    "name": "whisper-eo-v2",
+    "batch_size": 4,
+    "lr": 8e-6,
+    "epochs": 5
+}

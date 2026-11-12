@@ -2,6 +2,7 @@
 import os
 from typing import List, Any, Optional
 import zipfile
+import datetime
 import argparse as argp
 from model import Model
 from whisper_model import WhisperModel
@@ -10,7 +11,6 @@ from hmm_dnn_model import HMMDNNModel
 import pandas as pd
 import base_info as info
 import librosa
-import datetime
 
 BATCH_SIZE = 20
 
