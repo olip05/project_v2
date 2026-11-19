@@ -1,5 +1,5 @@
 """model interface"""
-from typing import List, Any
+from typing import List, Any, Optional, Tuple
 import pandas as pd
 
 class Model:
@@ -27,4 +27,7 @@ class Model:
 
     def predict(self, inputs: List[Any]) -> List[str]:
         """give model ouptuts"""
+        raise NotImplementedError("Predict method must be implemented by subclasses.")
+
+    def predict_nbest(self, inputs: List[Any], n_best: int = 5) -> Tuple[List[List[str]], Optional[List[List[float]]]]:
         raise NotImplementedError("Predict method must be implemented by subclasses.")

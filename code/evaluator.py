@@ -54,6 +54,8 @@ class Evaluator:
         transformation = jiwer.Compose([
             jiwer.RemoveMultipleSpaces(),
             jiwer.Strip(),
+            jiwer.RemovePunctuation(),
+            jiwer.ToLowerCase(),
             jiwer.ReduceToListOfListOfChars()
         ])
 
@@ -80,6 +82,8 @@ class Evaluator:
         transformation = jiwer.Compose([
             jiwer.RemoveMultipleSpaces(),
             jiwer.Strip(),
+            jiwer.RemovePunctuation(),
+            jiwer.ToLowerCase(),
             (jiwer.ReduceToListOfListOfWords() if words else jiwer.ReduceToListOfListOfChars())
         ])
 

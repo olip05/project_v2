@@ -15,9 +15,9 @@ import librosa
 BATCH_SIZE = 20
 
 parser = argp.ArgumentParser(description="Create transcripts for test dataset.")
-parser.add_argument("--base_model", nargs=1, required=False, help="List of HMM-DNN model names")
+parser.add_argument("--base_model", type=str, required=False, help="List of HMM-DNN model names")
 parser.add_argument("--vosk_model", type=str, required=False, help="List of Vosk model names")
-parser.add_argument("--whisper_model", nargs=1, required=False, help="List of Whisper names")
+parser.add_argument("--whisper_model", type=str, required=False, help="List of Whisper names")
 args = parser.parse_args()
 
 selected_models = [args.base_model, args.vosk_model, args.whisper_model]
