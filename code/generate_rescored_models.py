@@ -15,7 +15,7 @@ def main() -> None:
 
     # 2. Load the KenLM model trained strictly on the train split
     word_lm = NgramLanguageModel(
-        klm_path="models/lm/eo_geo_word_3g.klm",
+        klm_path="models/lm/eo_geo_char_4g.klm",
         alpha=0.0,
         beta=0.0,
         char_level=False,

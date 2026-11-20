@@ -1,0 +1,7 @@
+{
+    "name": "whisper-eo-v7",
+    "batch_size": 10,
+    "lr": 5e-5,
+    "epochs": 8,
+    "aug_factor": 1
+}

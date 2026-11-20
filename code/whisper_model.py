@@ -245,11 +245,13 @@ class WhisperModel(Model):
         self,
         inputs: List[Any],
         n_best: int = 5,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
     ) -> Tuple[List[List[str]], Optional[List[List[float]]]]:
-        """Return N-best candidate strings and sequence log-scores per sample."""
+        """Sample N-best candidate strings per sample for LM rescoring."""
         self.model.eval()
         k = max(1, int(n_best))
-        batch_size = 4
+        batch_size = 1
         total_samples = inputs.shape[0]
 
         all_hypotheses: List[List[str]] = []
@@ -263,56 +265,39 @@ class WhisperModel(Model):
 
                 outputs = self.model.generate(  # type: ignore
                     batch_inputs,
-                    num_beams=k,
+                    attention_mask=torch.ones(
+                        (batch_inputs.shape[0], batch_inputs.shape[-1]),
+                        dtype=torch.long,
+                        device=batch_inputs.device,
+                    ),
+                    num_beams=1,
+                    do_sample=True,
+                    temperature=temperature,
+                    top_p=top_p,
                     num_return_sequences=k,
                     return_dict_in_generate=True,
-                    output_scores=True,
                 )
 
                 sequences: torch.Tensor = outputs.sequences
-                decoded_flat: List[str] = self.processor.batch_decode(sequences, skip_special_tokens=True) # type: ignore
+                decoded_flat: List[str] = self.processor.batch_decode(  # type: ignore
+                    sequences,
+                    skip_special_tokens=True,
+                    clean_up_tokenization_spaces=False,
+                )
 
-                # Compute sequence log-probabilities if transition scores are available
-                seq_scores_list: Optional[List[float]] = None
-                if hasattr(outputs, "beam_indices") and outputs.beam_indices is not None and outputs.scores:
-                    try:
-                        seq_cpu = sequences.detach().cpu()
-                        scores_cpu = tuple(s.detach().float().cpu() for s in outputs.scores)
-                        beam_idx_cpu = outputs.beam_indices.detach().cpu()
-
-                        # Clamp negative/invalid beam indices before gather if any exist
-                        valid_beam_mask = beam_idx_cpu >= 0
-                        safe_beam_idx = torch.clamp(beam_idx_cpu, min=0)
-
-                        transition_scores = self.model.compute_transition_scores(  # type: ignore
-                            seq_cpu,
-                            scores_cpu,
-                            safe_beam_idx,
-                            normalize_logits=False,
-                        )
-                        # Zero out positions where beam_indices was negative or non-finite
-                        seq_len = transition_scores.shape[1]
-                        gen_tokens = seq_cpu[:, -seq_len:]
-                        keep_mask = (
-                            valid_beam_mask[:, -seq_len:]
-                            & torch.isfinite(transition_scores)
-                        )
-                        pad_id = self.processor.tokenizer.pad_token_id
-                        if pad_id is not None:
-                            keep_mask = keep_mask & gen_tokens.ne(pad_id)
-
-                        clean_scores = torch.where(keep_mask, transition_scores, torch.zeros_like(transition_scores))
-                        seq_scores_list = [float(x) for x in clean_scores.sum(dim=-1).tolist()]
-                    except Exception:
-                        seq_scores_list = None
+                # Use rank-based log-prior scores so sampled candidates have consistent scale
+                # with KenLM log10 scores and alpha tuning
+                seq_scores_list: List[float] = [
+                    float(-0.5 * (idx % k)) for idx in range(cur_batch_size * k)
+                ]
 
                 for b in range(cur_batch_size):
                     slice_start = b * k
                     slice_end = slice_start + k
                     all_hypotheses.append(decoded_flat[slice_start:slice_end])
-                    if seq_scores_list is not None:
-                        all_scores.append(seq_scores_list[slice_start:slice_end])
-                    else:
-                        all_scores.append([-0.5 * r for r in range(k)])
+                    all_scores.append(seq_scores_list[slice_start:slice_end])
+
+        distinct_count = sum(1 for cands in all_hypotheses if len(set(cands)) > 1)
+        print(f"Samples with >1 distinct candidate: {distinct_count} / {len(all_hypotheses)}")
 
         return all_hypotheses, all_scores
