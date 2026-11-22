@@ -112,7 +112,7 @@ class Evaluator:
 
     def results_to_file(self, content: Dict[str, Any], avg: bool) -> None:
         """save results fo json"""
-        with open(os.path.join(info.EVALUATION_PATH, f"{str(content['time']).replace(' ', '_')}-{'+'.join(content["models"])}{'-AVG' if avg else ''}.json"), "w", encoding="utf8") as f:
+        with open(os.path.join(info.EVALUATION_PATH, f"{str(content['time']).replace(' ', '_')}-{'+'.join([c[-2:] for c in content["models"]])}{'-AVG' if avg else ''}.json"), "w", encoding="utf8") as f:
             json.dump(content, f, indent=4)
 
     def compare_models(self, models: List[Model], write_to_file: bool = False, part_of_avg: bool = False) -> Dict[str, Any]:
