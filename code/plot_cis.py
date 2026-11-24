@@ -153,7 +153,7 @@ def _plot_single_metric(
     ax.grid(axis="y", linestyle="--", alpha=0.5)
 
     plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
+    plt.savefig(output_path, dpi=600)
     plt.close(fig)
     print(f"Saved {output_path}")
 
@@ -216,7 +216,7 @@ def _plot_combined_metric(
     ax.legend(handles=legend_handles, loc="upper right", frameon=True)
 
     plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
+    plt.savefig(output_path, dpi=600)
     plt.close(fig)
     print(f"Saved {output_path}")
 
